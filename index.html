@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face Mask Detection</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 30px;
+      background-color: #f4f4f9;
+    }
+    video {
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      width: 320px;
+      height: 240px;
+    }
+    canvas { display: none; }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover { background-color: #0056b3; }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Face Mask Detection</h2>
+  <video id="webcam" autoplay playsinline></video><br>
+  <button id="capture">Capture & Predict</button>
+  <canvas id="canvas" width="224" height="224"></canvas>
+  <div id="result"></div>
+
+  <script>
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const resultDiv = document.getElementById("result");
+    const captureBtn = document.getElementById("capture");
+
+    // Initialize webcam
+    async function startWebcam() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Unable to access webcam: " + err);
+      }
+    }
+
+    // Capture image and send to backend
+    captureBtn.addEventListener("click", async () => {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append("file", blob, "snapshot.jpg");
+
+        resultDiv.innerHTML = "⏳ Predicting...";
+
+        try {
+          const response = await fetch("http://127.0.0.1:8000/predict", {
+            method: "POST",
+            body: formData
+          });
+          const data = await response.json();
+          console.log(data)
+          resultDiv.innerHTML = `🧠 Prediction: <b>${data.prediction}</b><br> `;
+        } catch (error) {
+          resultDiv.innerHTML = "❌ Error: " + error.message;
+        }
+      }, "image/jpeg");
+    });
+
+    startWebcam();
+  </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+/data
+.venv
+app.log
+.ipynb_checkpoints
+README.md

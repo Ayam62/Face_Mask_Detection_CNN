@@ -3,3 +3,5 @@
 app.log
 .ipynb_checkpoints
 README.md
+.git
+face_mask_model.h5
